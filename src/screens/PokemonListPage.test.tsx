@@ -1,10 +1,15 @@
 import React from 'react';
-import { act, fireEvent, render } from 'src/test-utils';
+import { act, render } from 'src/test-utils';
 import { PokemonListPage } from './PokemonListPage';
 import { useNavigate } from 'react-router-dom';
 
 jest.mock('src/hooks/useGetPokemons', () => ({
-  useGetPokemons: jest.fn().mockReturnValue({ data: [{ id: '1', name: 'Bulbasaur' }] }),
+  useGetPokemons: jest.fn().mockReturnValue({
+    data: [
+      { id: '1', name: 'Bulbasaur' },
+      { id: '4', name: 'Charmander' },
+    ],
+  }),
 }));
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -25,7 +30,33 @@ describe('PokemonListPage', () => {
       await user.click(getByText('Bulbasaur'));
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith(/* The route to Bulbasaur */);
+    expect(mockNavigate).toHaveBeenCalledWith('/list/1');
   });
-  test.todo('typing in the search bar filters the results');
+  test('typing in the search bar filters the results', async () => {
+    const { getByPlaceholderText, queryByText, user } = render(<PokemonListPage />);
+    const searchInput = getByPlaceholderText('Search for a Pokémon');
+
+    // Initially all pokemon are present
+    expect(queryByText('Bulbasaur')).toBeInTheDocument();
+    expect(queryByText('Charmander')).toBeInTheDocument();
+
+    // Search for Charmander
+    await act(async () => {
+      await user.type(searchInput, 'Charmander');
+      await user.keyboard('{Enter}');
+    });
+
+    // Only Charmander should be present
+    expect(queryByText('Charmander')).toBeInTheDocument();
+    expect(queryByText('Bulbasaur')).not.toBeInTheDocument();
+
+    // Clear the search input
+    await act(async () => {
+      await user.clear(searchInput);
+      await user.keyboard('{Enter}');
+    });
+
+    // Bulbasaur should be present again
+    expect(queryByText('Bulbasaur')).toBeInTheDocument();
+  });
 });
