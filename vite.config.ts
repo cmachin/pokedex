@@ -6,7 +6,7 @@ import * as path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/pokedex/',
+  base: '',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
