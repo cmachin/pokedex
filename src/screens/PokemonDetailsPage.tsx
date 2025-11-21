@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { ReactElement, useMemo } from 'react';
 import {
   Modal,
   Spin,
@@ -21,6 +21,7 @@ export const PokemonDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, loading, error } = useGetPokemonDetails(Number(id));
+
   const items: DescriptionsProps['items'] = useMemo(
     () => [
       {
@@ -37,7 +38,7 @@ export const PokemonDetailsPage = () => {
         label: 'Types',
         key: 'types',
         children: (
-          <Flex gap="small">
+          <Flex gap="small" align="center">
             {data.types?.map((type) => (
               <Tag key={type} color={getTagColor(type)}>
                 {type ?? 'Unknown'}
@@ -65,8 +66,8 @@ export const PokemonDetailsPage = () => {
         label: 'HP',
         key: 'hp',
         children: (
-          <Flex gap="small">
-            <p style={{ width: '2rem', margin: 0 }}>{data.base_stats.hp}</p>
+          <Flex gap="small" align="center">
+            <p style={{ width: '2.5rem', margin: 0, whiteSpace: 'nowrap' }}>{data.base_stats.hp}</p>
             <Progress
               strokeColor="#78dc00"
               showInfo={false}
@@ -79,8 +80,10 @@ export const PokemonDetailsPage = () => {
         label: 'Attack',
         key: 'attack',
         children: (
-          <Flex gap="small">
-            <p style={{ width: '2rem', margin: 0 }}>{data.base_stats.attack}</p>
+          <Flex gap="small" align="center">
+            <p style={{ width: '2.5rem', margin: 0, whiteSpace: 'nowrap' }}>
+              {data.base_stats.attack}
+            </p>
             <Progress
               strokeColor="#ebcb00"
               showInfo={false}
@@ -93,8 +96,10 @@ export const PokemonDetailsPage = () => {
         label: 'Defense',
         key: 'defense',
         children: (
-          <Flex gap="small">
-            <p style={{ width: '2rem', margin: 0 }}>{data.base_stats.defense}</p>
+          <Flex gap="small" align="center">
+            <p style={{ width: '2.5rem', margin: 0, whiteSpace: 'nowrap' }}>
+              {data.base_stats.defense}
+            </p>
             <Progress
               strokeColor="#df6200"
               showInfo={false}
@@ -107,8 +112,10 @@ export const PokemonDetailsPage = () => {
         label: 'Special Attack',
         key: 'sp_atk',
         children: (
-          <Flex gap="small">
-            <p style={{ width: '2rem', margin: 0 }}>{data.base_stats.sp_atk}</p>
+          <Flex gap="small" align="center">
+            <p style={{ width: '2.5rem', margin: 0, whiteSpace: 'nowrap' }}>
+              {data.base_stats.sp_atk}
+            </p>
             <Progress
               strokeColor="#24e5ffff"
               showInfo={false}
@@ -121,8 +128,10 @@ export const PokemonDetailsPage = () => {
         label: 'Special Defense',
         key: 'sp_def',
         children: (
-          <Flex gap="small">
-            <p style={{ width: '2rem', margin: 0 }}>{data.base_stats.sp_def}</p>
+          <Flex gap="small" align="center">
+            <p style={{ width: '2.5rem', margin: 0, whiteSpace: 'nowrap' }}>
+              {data.base_stats.sp_def}
+            </p>
             <Progress
               strokeColor="#516be2"
               showInfo={false}
@@ -135,8 +144,10 @@ export const PokemonDetailsPage = () => {
         label: 'Speed',
         key: 'speed',
         children: (
-          <Flex gap="small">
-            <p style={{ width: '2rem', margin: 0 }}>{data.base_stats.speed}</p>
+          <Flex gap="small" align="center">
+            <p style={{ width: '2.5rem', margin: 0, whiteSpace: 'nowrap' }}>
+              {data.base_stats.speed}
+            </p>
             <Progress
               strokeColor="#cd1baf"
               showInfo={false}
@@ -154,32 +165,22 @@ export const PokemonDetailsPage = () => {
     [data],
   );
 
-  /* Display loading state if loading */
-  if (loading)
-    return (
-      <Modal
-        title="Loading..."
-        className={classes.root}
-        open
-        footer={null}
-        onCancel={() => navigate('/list')}
-      >
+  const getModalTitle = (): string => {
+    if (loading) return 'Loading...';
+    if (error) return 'ERROR!';
+    return data.name;
+  };
+
+  const getModalContent = (): ReactElement => {
+    if (loading)
+      return (
         <Spin tip="Fetching Pokémon details..." size="large">
           <div />
         </Spin>
-      </Modal>
-    );
+      );
 
-  /* Display an error state if an error occurs */
-  if (error)
-    return (
-      <Modal
-        title="ERROR!"
-        className={classes.root}
-        open
-        footer={null}
-        onCancel={() => navigate('/list')}
-      >
+    if (error)
+      return (
         <Result
           status="error"
           title="Looks like something went wrong!"
@@ -190,20 +191,25 @@ export const PokemonDetailsPage = () => {
             </Button>
           }
         />
-      </Modal>
-    );
+      );
 
-  /* Display an Pokémon details */
+    return (
+      <>
+        <Image preview={false} src={data.sprite} alt={data.name} />
+        <Descriptions bordered items={items} column={1} size="small" />
+      </>
+    );
+  };
+
   return (
     <Modal
       className={classes.root}
-      title={data.name}
+      title={getModalTitle()}
       open
       footer={null}
       onCancel={() => navigate('/list')}
     >
-      <Image preview={false} src={data.sprite} alt={data.name} />
-      <Descriptions bordered items={items} column={1} size="small" />
+      {getModalContent()}
     </Modal>
   );
 };

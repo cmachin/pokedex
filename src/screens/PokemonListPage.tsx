@@ -1,37 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { tss } from '../tss';
 import { useGetPokemons } from 'src/hooks/useGetPokemons';
 import { Card, Flex, Spin, Tag, Input, Empty, Image, Button, Result } from 'antd';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Pokemon } from 'src/types/pokemon.types';
 import { getTagColor } from 'src/utils/pokemon.utils';
 
 export const PokemonListPage = () => {
   const { classes } = useStyles();
   const { data, loading, error } = useGetPokemons();
-  const [pokemonList, setPokemonList] = useState<Pokemon[] | undefined>(undefined);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
-  /* Set list of pokemon but only on initial load to not trigger infinite re-renders */
-  useEffect(() => {
-    if (data && !loading && !error && !pokemonList) setPokemonList(data);
-  }, [data, loading, error, pokemonList]);
+  /* Pokemon list is updated when data or search term changes */
+  const filteredPokemonList = useMemo(() => {
+    if (!data?.length) return [];
+    if (!searchTerm.trim()) return data;
+    return data.filter((pokemon) => pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [data, searchTerm]);
 
-  /* Client-Side search */
-  const handleSearchSubmit = (value: string) => {
-    if (!value) {
-      setSearchTerm('');
-      setPokemonList(data);
-      return;
-    }
-    setPokemonList(
-      data.filter((pokemon) => pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())),
-    );
-  };
-
-  /* Display spinner if data is loading or if pokemon list has not been populated */
-  if (loading || (data && !pokemonList))
+  /* Display spinner if data is loading */
+  if (loading)
     return (
       <Flex className={classes.root} justify="center" align="center" style={{ height: '80vh' }}>
         <Spin tip="Fetching Pokédex..." size="large">
@@ -66,15 +54,14 @@ export const PokemonListPage = () => {
         allowClear
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        onSearch={handleSearchSubmit}
       />
       <Flex wrap="wrap" gap="middle" justify="center">
-        {!pokemonList?.length ? (
+        {!filteredPokemonList?.length ? (
           <Empty description>
             <p>No Pokémon found.</p>
           </Empty>
         ) : (
-          pokemonList?.map((pokemon) => (
+          filteredPokemonList?.map((pokemon) => (
             <Card
               key={pokemon.id}
               hoverable
